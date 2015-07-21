@@ -1,5 +1,10 @@
+#include <stdlib.h>
+
 #include <SDL.h>
 #include "SDL_image.h"
+
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #include "defines.h"
 #include "logger.h"
@@ -54,6 +59,9 @@ int main(int argc, char* argv[])
     }
 
     do_log("%d",count++);
+
+    glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     SDL_GL_SwapWindow(window);
     SDL_Delay(10);
