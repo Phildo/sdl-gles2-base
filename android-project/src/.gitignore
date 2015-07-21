@@ -1,0 +1,5 @@
+#copy org dir from SDL/android-project
+org
+#remember to enable SDL2_image in org/libsdl/app/SDLActivity.java by uncommenting:
+# System.loadLibrary("SDL2_image");
+

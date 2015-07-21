@@ -1,0 +1,34 @@
+CURDIR = $(shell pwd)
+SRCDIR = $(CURDIR)/src
+BINDIR = $(CURDIR)/bin
+OUTFILE = $(BINDIR)/dotest.out
+CC = g++
+DEBUGFLAGS = -ggdb3 -O0
+DEBUGGER = gdb -q
+CFLAGS = -Wall -std=c++11 `sdl2-config --cflags`
+LFLAGS = -Wall `sdl2-config --libs` -lSDL2_image
+
+HEADERS=$(wildcard $(SRCDIR)/*.h)
+SOURCES=$(wildcard $(SRCDIR)/*.cpp)
+
+$(OUTFILE): $(HEADERS) $(SOURCES)
+	@$(CC) $(CFLAGS) $(LFLAGS) $(SOURCES) -o $(OUTFILE)
+
+build: $(OUTFILE)
+	@
+
+run: $(OUTFILE)
+	@$(OUTFILE)
+
+$(OUTFILE).dSYM: $(HEADERS) $(SOURCES)
+	@$(CC) $(DEBUGFLAGS) $(CFLAGS) $(LFLAGS) $(SOURCES) -o $(OUTFILE)
+
+debug: $(OUTFILE).dSYM
+	@$(DEBUGGER) $(OUTFILE)
+
+clean:
+	@for f in $(OUTFILE) $(OUTFILE).dSYM ; do if [ -d $$f ] ; then rm -r $$f ; elif [ -f $$f ] ; then rm $$f ; fi ; done
+
+kill:
+	killAll $(OUTFILE)
+

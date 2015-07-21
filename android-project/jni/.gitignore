@@ -1,0 +1,6 @@
+#create symlink to SDL folder
+SDL
+
+#create symlink to SDL_image folder
+SDL_image
+
