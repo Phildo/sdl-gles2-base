@@ -9,7 +9,7 @@ DEBUGGER = gdb -q
 CFLAGS = -Wall -std=c++11 `sdl2-config --cflags`
 LFLAGS = -Wall `sdl2-config --libs` -lSDL2_image
 
-PLATFORM_FLAG=DO_PLATFORM_PC
+PLATFORM_FLAG=DO_PLATFORM_LINUX
 
 HEADERS=$(wildcard $(SRCDIR)/*.h)
 SOURCES=$(wildcard $(SRCDIR)/*.cpp)

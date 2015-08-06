@@ -2,9 +2,11 @@
 # This makefile mainly forwards make commands to correct project
 #
 SRC_DIR=src
+MAC_DIR=pc-project
+LINUX_DIR=linux-project
+PC_DIR=pc-project
 ANDROID_DIR=android-project
 IOS_DIR=ios-project
-PC_DIR=pc-project
 
 #
 # first to handle argumentless make
@@ -38,6 +40,72 @@ kill: akill
 
 
 #
+# mac
+#
+mvmake:
+	vim $(MAC_DIR)/makefile
+
+mbuild:
+	cd $(MAC_DIR); amake build;
+
+minstall:
+	cd $(MAC_DIR); amake install;
+
+mrun:
+	cd $(MAC_DIR); amake run;
+
+mdebug:
+	cd $(MAC_DIR); amake debug;
+
+mkill:
+	cd $(MAC_DIR); amake kill;
+
+
+#
+# linux
+#
+lvmake:
+	vim $(LINUX_DIR)/makefile
+
+lbuild:
+	cd $(LINUX_DIR); amake build;
+
+linstall:
+	cd $(LINUX_DIR); amake install;
+
+lrun:
+	cd $(LINUX_DIR); amake run;
+
+ldebug:
+	cd $(LINUX_DIR); amake debug;
+
+lkill:
+	cd $(LINUX_DIR); amake kill;
+
+
+#
+# pc
+#
+pvmake:
+	vim $(PC_DIR)/makefile
+
+pbuild:
+	cd $(PC_DIR); amake build;
+
+pinstall:
+	cd $(PC_DIR); amake install;
+
+prun:
+	cd $(PC_DIR); amake run;
+
+pdebug:
+	cd $(PC_DIR); amake debug;
+
+pkill:
+	cd $(PC_DIR); amake kill;
+
+
+#
 # android
 #
 avmake:
@@ -61,9 +129,6 @@ akill:
 #
 # ios
 #
-idefine:
-	sed -i.bak -E -e 's/define $(ANDROID_DEF)|define $(PC_DEF)/define $(IOS_DEF)/g' $(SRC_DIR)/defines.h && rm $(SRC_DIR)/defines.h.bak
-
 ivmake:
 	vim $(IOS_DIR)/makefile
 
@@ -81,35 +146,4 @@ idebug:
 
 ikill:
 	cd $(IOS_DIR); amake kill;
-
-
-#
-# pc
-#
-pdefine:
-	sed -i.bak -E -e 's/define $(IOS_DEF)|define $(ANDROID_DEF)/define $(PC_DEF)/g' $(SRC_DIR)/defines.h && rm $(SRC_DIR)/defines.h.bak
-
-pvmake:
-	vim $(PC_DIR)/makefile
-
-pbuild:
-	cd $(PC_DIR); amake build;
-
-pinstall:
-	cd $(PC_DIR); amake install;
-
-prun:
-	cd $(PC_DIR); amake run;
-
-prun4:
-	cd $(PC_DIR); amake run4;
-
-pdebug:
-	cd $(PC_DIR); amake debug;
-
-pdebug4:
-	cd $(PC_DIR); amake debug4;
-
-pkill:
-	cd $(PC_DIR); amake kill;
 

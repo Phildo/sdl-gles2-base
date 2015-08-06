@@ -1,12 +1,17 @@
+#include "defines.h"
+
 #include <stdlib.h>
 
 #include <SDL.h>
 #include "SDL_image.h"
 
+#if DO_PLATFORM == DO_PLATFORM_MAC
+#include <OpenGL/gl.h>
+#elif DO_PLATFORM == DO_PLATFORM_ANDROID
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#endif
 
-#include "defines.h"
 #include "logger.h"
 
 int main(int argc, char* argv[])
