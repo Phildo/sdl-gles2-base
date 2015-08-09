@@ -9,7 +9,7 @@ DEBUGGER = gdb -q
 CFLAGS = -Wall -std=c++11 `sdl2-config --cflags`
 LFLAGS = -Wall `sdl2-config --libs` -lSDL2_image
 
-PLATFORM_FLAG=DO_PLATFORM_PC
+PLATFORM_DEF=DO_PLATFORM_PC
 
 HEADERS=$(wildcard $(SRCDIR)/*.h)
 SOURCES=$(wildcard $(SRCDIR)/*.cpp)
@@ -18,7 +18,7 @@ b: build
 	
 
 define:
-	@sed -i .bak 's/DO_PLATFORM .*$$/DO_PLATFORM $(PLATFORM_FLAG)/' $(SRCDIR)/defines.h
+	@if sed -i .bak 's/DO_PLATFORM DO_PLATFORM_.*$$/DO_PLATFORM $(PLATFORM_DEF)/' $(SRCDIR)/defines.h; then rm $(SRCDIR)/defines.h.bak; fi
 
 $(OUTFILE): define $(HEADERS) $(SOURCES)
 	@$(CC) $(CFLAGS) $(LFLAGS) $(SOURCES) -o $(OUTFILE)

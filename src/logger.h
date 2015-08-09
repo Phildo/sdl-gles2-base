@@ -8,20 +8,19 @@
 #define DO_MAX_LOG_LEN 256
 #define DO_MAX_NUM_LOGS 256
 
-#ifdef DO_ANDROID
+#if DO_PLATFORM == DO_PLATFORM_ANDROID
+
 #include <android/log.h>
   #define do_log(t, ...) ({__android_log_print(ANDROID_LOG_INFO, "DO", t, ##__VA_ARGS__);})
-#endif
 
-#ifdef DO_IOS
-#endif
+#elif DO_PLATFORM == DO_PLATFORM_ANDROID
 
-#ifdef DO_PC
   #if DO_LOG_STORE
     #define do_log(t, ...) ({ printf(t, ##__VA_ARGS__); printf("\n"); fflush(stdout); char buff[DO_MAX_LOG_LEN]; sprintf(buff, t, ##__VA_ARGS__); log_data->log(buff); })
   #else
     #define do_log(t, ...) ({ printf(t, ##__VA_ARGS__); printf("\n"); fflush(stdout); })
   #endif
+
 #endif
 
 class Log;
