@@ -10,10 +10,10 @@
 
 #if DO_PLATFORM == DO_PLATFORM_ANDROID
 
-#include <android/log.h>
+  #include <android/log.h>
   #define do_log(t, ...) ({__android_log_print(ANDROID_LOG_INFO, "DO", t, ##__VA_ARGS__);})
 
-#elif DO_PLATFORM == DO_PLATFORM_ANDROID
+#elif DO_PLATFORM == DO_PLATFORM_MAC
 
   #if DO_LOG_STORE
     #define do_log(t, ...) ({ printf(t, ##__VA_ARGS__); printf("\n"); fflush(stdout); char buff[DO_MAX_LOG_LEN]; sprintf(buff, t, ##__VA_ARGS__); log_data->log(buff); })
