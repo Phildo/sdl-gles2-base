@@ -3,8 +3,7 @@
 #include <stdlib.h>
 
 #include <SDL.h>
-#include "SDL_image.h"
-
+#include <SDL_image.h>
 #include <SDL_opengl.h>
 
 #include "logger.h"
@@ -63,6 +62,113 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  glClearColor(0,0,0,1);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+
+  GLboolean gl_b;
+  glGetBooleanv(GL_SHADER_COMPILER, &gl_b);
+  if(!gl_b)
+  {
+    do_log("No shader compiler supported!");
+    SDL_Quit();
+    return 1;
+  }
+  do_log("Shader version supported:%s",glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+  GLuint gl_program_id;
+  GLuint gl_vs_id;
+  GLuint gl_fs_id;
+
+  char vs_file[2048];
+  char *vs_file_p = &vs_file[0];
+  char fs_file[2048];
+  char *fs_file_p = &fs_file[0];
+
+  FILE *fp;
+  int i,c;
+
+  fp = fopen("../src/shaders/white2d.vert", "r");
+  if(!fp)
+  {
+    do_log("Can't find/open file:%s","../src/shaders/white2d.vert");
+    SDL_Quit();
+    return 1;
+  }
+  c = 0; for(i = 0; i < 2048 && c != EOF; i++) { c = fgetc(fp); if(c != EOF) vs_file[i] = (char)c; else vs_file[i] = '\0'; }
+
+  fp = fopen("../src/shaders/white2d.frag", "r");
+  if(!fp)
+  {
+    do_log("Can't find/open file:%s","../src/shaders/white2d.frag");
+    SDL_Quit();
+    return 1;
+  }
+  c = 0; for(i = 0; i < 2048 && c != EOF; i++) { c = fgetc(fp); if(c != EOF) fs_file[i] = (char)c; else fs_file[i] = '\0'; }
+
+  gl_vs_id = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(gl_vs_id, 1, &vs_file_p, NULL);
+  glCompileShader(gl_vs_id);
+
+  gl_fs_id = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(gl_fs_id, 1, &fs_file_p, NULL);
+  glCompileShader(gl_fs_id);
+
+  GLint err;
+  glGetShaderiv(gl_vs_id, GL_COMPILE_STATUS, &err);
+  if(err == GL_FALSE)
+  {
+    int l;
+    glGetShaderInfoLog(gl_vs_id, 2048, &l, vs_file_p);
+    do_log("Error compiling VS:%s\n%s","../src/shaders/white2d.vert",vs_file);
+    SDL_Quit();
+    return 1;
+  }
+
+  glGetShaderiv(gl_fs_id, GL_COMPILE_STATUS, &err);
+  if(err == GL_FALSE)
+  {
+    int l;
+    glGetShaderInfoLog(gl_fs_id, 2048, &l, fs_file_p);
+    do_log("Error compiling FS:%s\n%s","../src/shaders/white2d.frag",fs_file);
+    SDL_Quit();
+    return 1;
+  }
+
+  gl_program_id = glCreateProgram();
+  glAttachShader(gl_program_id, gl_vs_id);
+  glAttachShader(gl_program_id, gl_fs_id);
+  glLinkProgram(gl_program_id);
+
+  glGetProgramiv(gl_fs_id, GL_LINK_STATUS, &err);
+  if(err == GL_FALSE)
+  {
+    do_log("Error linking VS & FS : %s & %s","../src/shaders/white2d.vert","../src/shaders/white2d.frag");
+    SDL_Quit();
+    return 1;
+  }
+
+  glDeleteShader(gl_vs_id);
+  glDeleteShader(gl_fs_id);
+
+  glUseProgram(gl_program_id);
+
+  GLuint gl_pos_attrib_id;
+  GLuint gl_pos_buff_id;
+
+  gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
+
+  //pos buff
+  glGenBuffers(1, &gl_pos_buff_id);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
+  glVertexAttribPointer(gl_pos_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_pos_attrib_id);
+
+
+
+
   Uint8 done = 0;
   SDL_Event event;
   while(!done)
@@ -76,7 +182,7 @@ int main(int argc, char* argv[])
     }
 
     glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     SDL_GL_SwapWindow(window);
     SDL_Delay(10);
