@@ -1,11 +1,7 @@
-#version 410
-
-precision mediump float;
-
-out vec4 color;
+#version 110
 
 void main()
 {
-  color = vec4(1.);
+  gl_FragColor = vec4(1.);
 }
 

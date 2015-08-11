@@ -1,6 +1,6 @@
-#version 410
+#version 110
 
-in vec2 position;
+attribute vec2 position;
 
 void main()
 {

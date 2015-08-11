@@ -24,21 +24,19 @@ int main(int argc, char* argv[])
   printf("SDL Linked Version:    %d.%d.%d\n", linked.major, linked.minor, linked.patch);
 
   #if DO_PLATFORM == DO_PLATFORM_MAC
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
   #elif DO_PLATFORM == DO_PLATFORM_ANDROID
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
   #endif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,1);
+
+  SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL,1);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
 
   SDL_DisplayMode mode;
   SDL_GetDisplayMode(0,0,&mode);
   do_log("Width = %d, Height = %d.",mode.w,mode.h);
-
-  SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL,1);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,16);
 
   SDL_Window* window = 0;
   #if DO_PLATFORM == DO_PLATFORM_MAC
@@ -62,25 +60,21 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  glClearColor(0,0,0,1);
+  do_log("GL Renderer: %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
+  do_log("GL Version: %s", glGetString(GL_VERSION));
+
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
 
-  GLboolean gl_b;
-  glGetBooleanv(GL_SHADER_COMPILER, &gl_b);
-  if(!gl_b)
-  {
-    do_log("No shader compiler supported!");
-    SDL_Quit();
-    return 1;
-  }
-  do_log("Shader version supported:%s",glGetString(GL_SHADING_LANGUAGE_VERSION));
-
+  //GLuint gl_fb_id;
   GLuint gl_program_id;
   GLuint gl_vs_id;
   GLuint gl_fs_id;
+  GLuint gl_pos_attrib_id;
+  GLuint gl_pos_buff_id;
+
 
   char vs_file[2048];
   char *vs_file_p = &vs_file[0];
@@ -155,19 +149,18 @@ int main(int argc, char* argv[])
 
   glUseProgram(gl_program_id);
 
-  GLuint gl_pos_attrib_id;
-  GLuint gl_pos_buff_id;
-
   gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
 
   //pos buff
+  float verts[] = {0.0,0.0,0.5,1.0,1.0,0.0};
   glGenBuffers(1, &gl_pos_buff_id);
   glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
   glVertexAttribPointer(gl_pos_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
   glEnableVertexAttribArray(gl_pos_attrib_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*3, verts, GL_STATIC_DRAW);
 
-
-
+  //glGenFramebuffers(1, &gl_fb_id);
+  //glBindFramebuffer(GL_FRAMEBUFFER, gl_fb_id);
 
   Uint8 done = 0;
   SDL_Event event;
@@ -181,8 +174,9 @@ int main(int argc, char* argv[])
       }
     }
 
-    glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
+    //glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glDrawArrays(GL_TRIANGLES,0,3*3);
 
     SDL_GL_SwapWindow(window);
     SDL_Delay(10);
