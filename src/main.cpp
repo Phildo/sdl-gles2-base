@@ -4,7 +4,13 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+
+#if DO_PLATFORM == DO_PLATFORM_MAC
 #include <SDL_opengl.h>
+#elif DO_PLATFORM == DO_PLATFORM_ANDROID
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#endif
 
 #include "logger.h"
 
@@ -84,31 +90,34 @@ int main(int argc, char* argv[])
   GLuint gl_pos_attrib_id;
   GLuint gl_pos_buff_id;
 
+  SDL_RWops *io;
+
+  const static char *vs_file_name = "../assets/shaders/white2d.vert";
   char vs_file[2048];
   char *vs_file_p = &vs_file[0];
+  const static char *fs_file_name = "../assets/shaders/white2d.frag";
   char fs_file[2048];
   char *fs_file_p = &fs_file[0];
 
-  FILE *fp;
-  int i,c;
-
-  fp = fopen("../src/shaders/white2d.vert", "r");
-  if(!fp)
+  io = SDL_RWFromFile(vs_file_name,"r");
+  if(!io)
   {
-    do_log("Can't find/open file:%s","../src/shaders/white2d.vert");
+    do_log("Can't find/open file:%s\n%s",vs_file_name,SDL_GetError());
     SDL_Quit();
     return 1;
   }
-  c = 0; for(i = 0; i < 2048 && c != EOF; i++) { c = fgetc(fp); if(c != EOF) vs_file[i] = (char)c; else vs_file[i] = '\0'; }
+  vs_file[(int)SDL_RWread(io, vs_file, 1, sizeof(vs_file))] = '\0';
+  SDL_RWclose(io);
 
-  fp = fopen("../src/shaders/white2d.frag", "r");
-  if(!fp)
+  io = SDL_RWFromFile(fs_file_name,"r");
+  if(!io)
   {
-    do_log("Can't find/open file:%s","../src/shaders/white2d.frag");
+    do_log("Can't find/open file:%s\n%s",fs_file_name,SDL_GetError());
     SDL_Quit();
     return 1;
   }
-  c = 0; for(i = 0; i < 2048 && c != EOF; i++) { c = fgetc(fp); if(c != EOF) fs_file[i] = (char)c; else fs_file[i] = '\0'; }
+  fs_file[(int)SDL_RWread(io, fs_file, 1, sizeof(fs_file))] = '\0';
+  SDL_RWclose(io);
 
   gl_vs_id = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(gl_vs_id, 1, &vs_file_p, NULL);
@@ -124,7 +133,7 @@ int main(int argc, char* argv[])
   {
     int l;
     glGetShaderInfoLog(gl_vs_id, 2048, &l, vs_file_p);
-    do_log("Error compiling VS:%s\n%s","../src/shaders/white2d.vert",vs_file);
+    do_log("Error compiling VS:%s\n%s",vs_file_name,vs_file);
     SDL_Quit();
     return 1;
   }
@@ -134,7 +143,7 @@ int main(int argc, char* argv[])
   {
     int l;
     glGetShaderInfoLog(gl_fs_id, 2048, &l, fs_file_p);
-    do_log("Error compiling FS:%s\n%s","../src/shaders/white2d.frag",fs_file);
+    do_log("Error compiling FS:%s\n%s",fs_file_name,fs_file);
     SDL_Quit();
     return 1;
   }
@@ -147,7 +156,7 @@ int main(int argc, char* argv[])
   glGetProgramiv(gl_fs_id, GL_LINK_STATUS, &err);
   if(err == GL_FALSE)
   {
-    do_log("Error linking VS & FS : %s & %s","../src/shaders/white2d.vert","../src/shaders/white2d.frag");
+    do_log("Error linking VS & FS : %s & %s",vs_file_name,fs_file_name);
     SDL_Quit();
     return 1;
   }
@@ -171,8 +180,8 @@ int main(int argc, char* argv[])
   //glGenFramebuffers(1, &gl_fb_id);
   //glBindFramebuffer(GL_FRAMEBUFFER, gl_fb_id);
 
-  glViewport(0,0,1024,512);
-  for(i = 0; i < 6; i++) rand(); //gangsta seeding
+  glViewport(0,0,win_w,win_h);
+  for(int i = 0; i < 6; i++) rand(); //gangsta seeding
   glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(gl_program_id);
