@@ -92,11 +92,16 @@ int main(int argc, char* argv[])
 
   SDL_RWops *io;
 
-  const static char *vs_file_name = "../assets/shaders/white2d.vert";
+  #if DO_PLATFORM == DO_PLATFORM_ANDROID
+  const char *vs_file_name = "shaders/white2d.vert";
+  const char *fs_file_name = "shaders/white2d.frag";
+  #else
+  const char *vs_file_name = "../assets/shaders/white2d.vert";
+  const char *fs_file_name = "../assets/shaders/white2d.frag";
+  #endif
   char vs_file[2048];
-  char *vs_file_p = &vs_file[0];
-  const static char *fs_file_name = "../assets/shaders/white2d.frag";
   char fs_file[2048];
+  char *vs_file_p = &vs_file[0];
   char *fs_file_p = &fs_file[0];
 
   io = SDL_RWFromFile(vs_file_name,"r");
