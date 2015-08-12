@@ -38,11 +38,19 @@ int main(int argc, char* argv[])
   SDL_GetDisplayMode(0,0,&mode);
   do_log("Width = %d, Height = %d.",mode.w,mode.h);
 
+  #if DO_PLATFORM == DO_PLATFORM_MAC
+  int win_w = 1024;
+  int win_h = 512;
+  #elif DO_PLATFORM == DO_PLATFORM_ANDROID
+  int win_w = mode.w;
+  int win_h = mode.h;
+  #endif
+
   SDL_Window* window = 0;
   #if DO_PLATFORM == DO_PLATFORM_MAC
-  window = SDL_CreateWindow("Fish", 0,0,1024,512, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI); //Have to explicitly allow HIGHDPI in Info.plist!
+  window = SDL_CreateWindow("Fish", 0,0,win_w,win_h, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI); //Have to explicitly allow HIGHDPI in Info.plist!
   #elif DO_PLATFORM == DO_PLATFORM_ANDROID
-  window = SDL_CreateWindow("Fish", 0,0,mode.w,mode.h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI);
+  window = SDL_CreateWindow("Fish", 0,0,win_w,win_h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI);
   #endif
   if(window == 0)
   {
@@ -60,13 +68,14 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  do_log("GL Renderer: %s", glGetString(GL_RENDERER), glGetString(GL_VERSION));
+  do_log("GL Renderer: %s", glGetString(GL_RENDERER));
   do_log("GL Version: %s", glGetString(GL_VERSION));
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
+  glViewport(0, 0, win_w, win_h);
 
   //GLuint gl_fb_id;
   GLuint gl_program_id;
@@ -74,7 +83,6 @@ int main(int argc, char* argv[])
   GLuint gl_fs_id;
   GLuint gl_pos_attrib_id;
   GLuint gl_pos_buff_id;
-
 
   char vs_file[2048];
   char *vs_file_p = &vs_file[0];
@@ -152,15 +160,32 @@ int main(int argc, char* argv[])
   gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
 
   //pos buff
-  float verts[] = {0.0,0.0,0.5,1.0,1.0,0.0};
+  //float verts[] = {0.0,0.0,0.5,1.0,1.0,0.0};
+  float verts[] = {1.0,0.0,0.5,1.0,0.0,0.0};
   glGenBuffers(1, &gl_pos_buff_id);
   glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
-  glVertexAttribPointer(gl_pos_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-  glEnableVertexAttribArray(gl_pos_attrib_id);
   glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*3, verts, GL_STATIC_DRAW);
+  glVertexAttribPointer(gl_pos_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_pos_attrib_id);
 
   //glGenFramebuffers(1, &gl_fb_id);
   //glBindFramebuffer(GL_FRAMEBUFFER, gl_fb_id);
+
+  glViewport(0,0,1024,512);
+  for(i = 0; i < 6; i++) rand(); //gangsta seeding
+  glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glUseProgram(gl_program_id);
+
+  //for(i = 0; i < 6; i++) verts[i] = (rand()%256)/256.0f;
+  glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*3, verts, GL_STATIC_DRAW);
+  glVertexAttribPointer(gl_pos_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_pos_attrib_id);
+
+  glDrawArrays(GL_TRIANGLES,0,3*3);
+
+  SDL_GL_SwapWindow(window);
 
   Uint8 done = 0;
   SDL_Event event;
@@ -173,12 +198,6 @@ int main(int argc, char* argv[])
         done = 1;
       }
     }
-
-    //glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    glDrawArrays(GL_TRIANGLES,0,3*3);
-
-    SDL_GL_SwapWindow(window);
     SDL_Delay(10);
   }
 
