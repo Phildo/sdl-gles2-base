@@ -1,4 +1,4 @@
 #was told to ignore this. no idea why
 local.properties
 
-#copy any contents of bin,gen,libs,obj,res,src/org from SDL/android-project
+#copy any contents of res from SDL/android-project
