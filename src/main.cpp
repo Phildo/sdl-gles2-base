@@ -122,16 +122,18 @@ int main(int argc, char* argv[])
   GLuint gl_fs_id;
   GLuint gl_pos_attrib_id;
   GLuint gl_pos_buff_id;
+  GLuint gl_col_attrib_id;
+  GLuint gl_col_buff_id;
   GLuint gl_ind_buff_id;
 
   SDL_RWops *io;
 
   #if DO_PLATFORM == DO_PLATFORM_ANDROID
-  const char *vs_file_name = "shaders/white2d.vert";
-  const char *fs_file_name = "shaders/white2d.frag";
+  const char *vs_file_name = "shaders/color2d.vert";
+  const char *fs_file_name = "shaders/color2d.frag";
   #else
-  const char *vs_file_name = "../assets/shaders/white2d.vert";
-  const char *fs_file_name = "../assets/shaders/white2d.frag";
+  const char *vs_file_name = "../assets/shaders/color2d.vert";
+  const char *fs_file_name = "../assets/shaders/color2d.frag";
   #endif
   char vs_file[2048];
   char fs_file[2048];
@@ -205,14 +207,22 @@ int main(int argc, char* argv[])
 
   glUseProgram(gl_program_id);
   gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
+  gl_col_attrib_id = glGetAttribLocation(gl_program_id, "color");
 
   int nrows = 2;
   int ncols = 2;
   fv2 *vbuff = (fv2 *)malloc(sizeof(fv2)*vertsReqForRectMesh(nrows,ncols));
+  fv3 *cbuff = (fv3 *)malloc(sizeof(fv3)*vertsReqForRectMesh(nrows,ncols));
   int *ibuff = (int *)malloc(sizeof(int)*indsReqForRectMesh(nrows,ncols));
   fv2 a = { -0.9f, -0.9f };
   fv2 b = {  0.9f,  0.9f };
   genfv2RectMesh(a, b, nrows, ncols, vbuff, ibuff);
+  for(int i = 0; i < vertsReqForRectMesh(nrows,ncols); i++)
+  {
+    cbuff[i].x = (rand()%256)/256.0f;
+    cbuff[i].y = (rand()%256)/256.0f;
+    cbuff[i].z = (rand()%256)/256.0f;
+  }
 
   for(int i = 0; i < vertsReqForRectMesh(nrows,ncols); i++)
     do_log("v%f,%f",vbuff[i].x,vbuff[i].y);
@@ -224,6 +234,12 @@ int main(int argc, char* argv[])
   glBufferData(GL_ARRAY_BUFFER, sizeof(fv2)*vertsReqForRectMesh(nrows,ncols), vbuff, GL_STATIC_DRAW);
   glVertexAttribPointer(gl_pos_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
   glEnableVertexAttribArray(gl_pos_attrib_id);
+
+  glGenBuffers(1, &gl_col_buff_id);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_col_buff_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(fv3)*vertsReqForRectMesh(nrows,ncols), cbuff, GL_STATIC_DRAW);
+  glVertexAttribPointer(gl_col_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_col_attrib_id);
 
   glGenBuffers(1, &gl_ind_buff_id);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ind_buff_id);
