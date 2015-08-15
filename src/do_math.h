@@ -1,6 +1,13 @@
 #ifndef DO_MATH_H
 #define DO_MATH_H
 
+#include <stdlib.h>
+
+float randf()
+{
+  return (rand()%256)/256.0f;
+}
+
 typedef struct { float x; float y; } fv2;
 typedef struct { float x; float y; float z; } fv3;
 typedef struct { float x; float y; float z; float w; } fv4;

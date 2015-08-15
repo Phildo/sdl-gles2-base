@@ -124,16 +124,17 @@ int main(int argc, char* argv[])
   GLuint gl_pos_buff_id;
   GLuint gl_col_attrib_id;
   GLuint gl_col_buff_id;
+  GLuint gl_time_unif_id;
   GLuint gl_ind_buff_id;
 
   SDL_RWops *io;
 
   #if DO_PLATFORM == DO_PLATFORM_ANDROID
-  const char *vs_file_name = "shaders/color2d.vert";
-  const char *fs_file_name = "shaders/color2d.frag";
+  const char *vs_file_name = "shaders/warp2d.vert";
+  const char *fs_file_name = "shaders/warp2d.frag";
   #else
-  const char *vs_file_name = "../assets/shaders/color2d.vert";
-  const char *fs_file_name = "../assets/shaders/color2d.frag";
+  const char *vs_file_name = "../assets/shaders/warp2d.vert";
+  const char *fs_file_name = "../assets/shaders/warp2d.frag";
   #endif
   char vs_file[2048];
   char fs_file[2048];
@@ -208,6 +209,7 @@ int main(int argc, char* argv[])
   glUseProgram(gl_program_id);
   gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
   gl_col_attrib_id = glGetAttribLocation(gl_program_id, "color");
+  gl_time_unif_id = glGetUniformLocation(gl_program_id, "time");
 
   int nrows = 2;
   int ncols = 2;
@@ -219,15 +221,10 @@ int main(int argc, char* argv[])
   genfv2RectMesh(a, b, nrows, ncols, vbuff, ibuff);
   for(int i = 0; i < vertsReqForRectMesh(nrows,ncols); i++)
   {
-    cbuff[i].x = (rand()%256)/256.0f;
-    cbuff[i].y = (rand()%256)/256.0f;
-    cbuff[i].z = (rand()%256)/256.0f;
+    cbuff[i].x = randf();
+    cbuff[i].y = randf();
+    cbuff[i].z = randf();
   }
-
-  for(int i = 0; i < vertsReqForRectMesh(nrows,ncols); i++)
-    do_log("v%f,%f",vbuff[i].x,vbuff[i].y);
-  for(int i = 0; i < indsReqForRectMesh(nrows,ncols); i++)
-    do_log("i%d",ibuff[i]);
 
   glGenBuffers(1, &gl_pos_buff_id);
   glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
@@ -246,7 +243,7 @@ int main(int argc, char* argv[])
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indsReqForRectMesh(nrows,ncols), ibuff, GL_STATIC_DRAW);
 
   glViewport(0,0,win_w,win_h);
-  glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
+  glClearColor(randf(),randf(),randf(),1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glDrawElements(GL_TRIANGLES, indsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
@@ -255,6 +252,7 @@ int main(int argc, char* argv[])
 
   Uint8 done = 0;
   SDL_Event event;
+
   while(!done)
   {
     while(SDL_PollEvent(&event))
@@ -271,6 +269,12 @@ int main(int argc, char* argv[])
         done = 1;
       }
     }
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUniform1f(gl_time_unif_id,randf());
+    glDrawElements(GL_TRIANGLES, indsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
+    SDL_GL_SwapWindow(window);
+
     SDL_Delay(10);
   }
 
