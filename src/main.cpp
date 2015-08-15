@@ -12,7 +12,40 @@
 #include <GLES2/gl2ext.h>
 #endif
 
+#include "do_math.h"
 #include "logger.h"
+
+int vertsReqForRectMesh(int nrows, int ncols)
+{
+  return (nrows+1)*(ncols+1);
+}
+int indsReqForRectMesh(int nrows, int ncols)
+{
+  return (nrows*ncols*2*3);
+}
+void genfv2RectMesh(fv2 a, fv2 b, int nrows, int ncols, fv2 *vbuff, int *ibuff)
+{
+  int nvcols = ncols+1;
+  int nvrows = nrows+1;
+
+  for(int i = 0; i < nvrows; i++)
+    for(int j = 0; j < nvcols; j++)
+      vbuff[(i*nvcols)+j] = fv2{ lerpf(a.x,b.x,(1.0f/ncols)*j), lerpf(a.x,b.x,(1.0f/nrows)*i) };
+
+  for(int i = 0; i < nrows; i++)
+  {
+    for(int j = 0; j < ncols; j++)
+    {
+      //                               y            x
+      ibuff[(((i*ncols)+j)*6)+0] = ((i+0)*nvcols)+(j+0);
+      ibuff[(((i*ncols)+j)*6)+1] = ((i+0)*nvcols)+(j+1);
+      ibuff[(((i*ncols)+j)*6)+2] = ((i+1)*nvcols)+(j+0);
+      ibuff[(((i*ncols)+j)*6)+3] = ((i+1)*nvcols)+(j+0);
+      ibuff[(((i*ncols)+j)*6)+4] = ((i+0)*nvcols)+(j+1);
+      ibuff[(((i*ncols)+j)*6)+5] = ((i+1)*nvcols)+(j+1);
+    }
+  }
+}
 
 int main(int argc, char* argv[])
 {
@@ -89,6 +122,7 @@ int main(int argc, char* argv[])
   GLuint gl_fs_id;
   GLuint gl_pos_attrib_id;
   GLuint gl_pos_buff_id;
+  GLuint gl_ind_buff_id;
 
   SDL_RWops *io;
 
@@ -170,34 +204,36 @@ int main(int argc, char* argv[])
   glDeleteShader(gl_fs_id);
 
   glUseProgram(gl_program_id);
-
   gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
 
-  //pos buff
-  //float verts[] = {0.0,0.0,0.5,1.0,1.0,0.0};
-  float verts[] = {1.0,0.0,0.5,1.0,0.0,0.0};
+  int nrows = 2;
+  int ncols = 2;
+  fv2 *vbuff = (fv2 *)malloc(sizeof(fv2)*vertsReqForRectMesh(nrows,ncols));
+  int *ibuff = (int *)malloc(sizeof(int)*indsReqForRectMesh(nrows,ncols));
+  fv2 a = { -0.9f, -0.9f };
+  fv2 b = {  0.9f,  0.9f };
+  genfv2RectMesh(a, b, nrows, ncols, vbuff, ibuff);
+
+  for(int i = 0; i < vertsReqForRectMesh(nrows,ncols); i++)
+    do_log("v%f,%f",vbuff[i].x,vbuff[i].y);
+  for(int i = 0; i < indsReqForRectMesh(nrows,ncols); i++)
+    do_log("i%d",ibuff[i]);
+
   glGenBuffers(1, &gl_pos_buff_id);
   glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*3, verts, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(fv2)*vertsReqForRectMesh(nrows,ncols), vbuff, GL_STATIC_DRAW);
   glVertexAttribPointer(gl_pos_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
   glEnableVertexAttribArray(gl_pos_attrib_id);
 
-  //glGenFramebuffers(1, &gl_fb_id);
-  //glBindFramebuffer(GL_FRAMEBUFFER, gl_fb_id);
+  glGenBuffers(1, &gl_ind_buff_id);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ind_buff_id);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indsReqForRectMesh(nrows,ncols), ibuff, GL_STATIC_DRAW);
 
   glViewport(0,0,win_w,win_h);
-  for(int i = 0; i < 6; i++) rand(); //gangsta seeding
   glClearColor((rand()%256)/256.0f,(rand()%256)/256.0f,(rand()%256)/256.0f,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(gl_program_id);
 
-  //for(i = 0; i < 6; i++) verts[i] = (rand()%256)/256.0f;
-  glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*3, verts, GL_STATIC_DRAW);
-  glVertexAttribPointer(gl_pos_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-  glEnableVertexAttribArray(gl_pos_attrib_id);
-
-  glDrawArrays(GL_TRIANGLES,0,3*3);
+  glDrawElements(GL_TRIANGLES, indsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
 
   SDL_GL_SwapWindow(window);
 
@@ -207,7 +243,14 @@ int main(int argc, char* argv[])
   {
     while(SDL_PollEvent(&event))
     {
-      if(event.type == SDL_QUIT || event.type == SDL_KEYDOWN || event.type == SDL_FINGERDOWN)
+      if(
+        false
+        || event.type == SDL_QUIT
+        || event.type == SDL_KEYDOWN
+      #if DO_PLATFORM == DO_PLATFORM_ANDROID
+        || event.type == SDL_FINGERDOWN
+      #endif
+      )
       {
         done = 1;
       }
