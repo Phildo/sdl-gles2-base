@@ -1,11 +1,11 @@
 attribute vec4 position;
-attribute vec2 tex_coord;
+attribute vec2 texture_uv;
 
-varying vec2 var_tex_coord;
+varying vec2 var_texture_uv;
 
 void main()
 {
-  var_tex_coord = tex_coord;
+  var_texture_uv = texture_uv;
   gl_Position = position;
 }
 

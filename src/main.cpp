@@ -15,15 +15,15 @@
 #include "do_math.h"
 #include "logger.h"
 
-int vertsReqForRectMesh(int nrows, int ncols)
+int numVertsReqForRectMesh(int nrows, int ncols)
 {
   return (nrows+1)*(ncols+1);
 }
-int indsReqForRectMesh(int nrows, int ncols)
+int numIndsReqForRectMesh(int nrows, int ncols)
 {
   return (nrows*ncols*2*3);
 }
-void genfv2RectMesh(fv2 a, fv2 b, int nrows, int ncols, fv2 *vbuff, int *ibuff)
+void genfv2RectMeshVerts(fv2 a, fv2 b, int nrows, int ncols, fv2 *vbuff)
 {
   int nvcols = ncols+1;
   int nvrows = nrows+1;
@@ -31,6 +31,11 @@ void genfv2RectMesh(fv2 a, fv2 b, int nrows, int ncols, fv2 *vbuff, int *ibuff)
   for(int i = 0; i < nvrows; i++)
     for(int j = 0; j < nvcols; j++)
       vbuff[(i*nvcols)+j] = fv2{ lerpf(a.x,b.x,(1.0f/ncols)*j), lerpf(a.x,b.x,(1.0f/nrows)*i) };
+}
+void genRectMeshInds(int nrows, int ncols, int *ibuff)
+{
+  int nvcols = ncols+1;
+  //int nvrows = nrows+1; //unused
 
   for(int i = 0; i < nrows; i++)
   {
@@ -194,68 +199,97 @@ int main(int argc, char* argv[])
 
   //GLuint gl_fb_id;
   GLuint gl_program_id;
-  GLuint gl_pos_attrib_id;
-  GLuint gl_pos_buff_id;
-  GLuint gl_col_attrib_id;
-  GLuint gl_col_buff_id;
+  GLuint gl_position_buff_id;
+  GLuint gl_color_buff_id;
+  GLuint gl_texture_uv_buff_id;
+  GLuint gl_index_buff_id;
+  GLuint gl_texture_buff_id;
+  GLuint gl_position_attrib_id;
+  GLuint gl_color_attrib_id;
+  GLuint gl_texture_uv_attrib_id;
   GLuint gl_time_unif_id;
-  GLuint gl_ind_buff_id;
+  GLuint gl_texture_unif_id;
 
   #if DO_PLATFORM == DO_PLATFORM_ANDROID
-  const char *vs_file_name = "shaders/warp2d.vert";
-  const char *fs_file_name = "shaders/warp2d.frag";
+  gl_program_id = compileProgram("shaders/texture2d.vert", "shaders/texture2d.frag");
   #else
-  const char *vs_file_name = "../assets/shaders/warp2d.vert";
-  const char *fs_file_name = "../assets/shaders/warp2d.frag";
+  gl_program_id = compileProgram("../assets/shaders/texture2d.vert", "../assets/shaders/texture2d.frag");
   #endif
-
-  gl_program_id = compileProgram(vs_file_name, fs_file_name);
   if(!gl_program_id)
   {
     SDL_Quit();
     return 0;
   }
   glUseProgram(gl_program_id);
-  gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
-  gl_col_attrib_id = glGetAttribLocation(gl_program_id, "color");
+  gl_position_attrib_id = glGetAttribLocation(gl_program_id, "position");
+  gl_color_attrib_id = glGetAttribLocation(gl_program_id, "color");
+  gl_texture_uv_attrib_id = glGetAttribLocation(gl_program_id, "texture_uv");
   gl_time_unif_id = glGetUniformLocation(gl_program_id, "time");
+  gl_texture_unif_id = glGetUniformLocation(gl_program_id, "texture");
 
   int nrows = 2;
   int ncols = 2;
-  fv2 *vbuff = (fv2 *)malloc(sizeof(fv2)*vertsReqForRectMesh(nrows,ncols));
-  fv3 *cbuff = (fv3 *)malloc(sizeof(fv3)*vertsReqForRectMesh(nrows,ncols));
-  int *ibuff = (int *)malloc(sizeof(int)*indsReqForRectMesh(nrows,ncols));
+  fv2 *position_buff   = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(nrows,ncols));
+  fv3 *color_buff      = (fv3 *)malloc(sizeof(fv3)*numVertsReqForRectMesh(nrows,ncols));
+  fv2 *texture_uv_buff = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(nrows,ncols));
+  int *index_buff      = (int *)malloc(sizeof(int)*numIndsReqForRectMesh(nrows,ncols));
   fv2 a = { -0.9f, -0.9f };
   fv2 b = {  0.9f,  0.9f };
-  genfv2RectMesh(a, b, nrows, ncols, vbuff, ibuff);
-  for(int i = 0; i < vertsReqForRectMesh(nrows,ncols); i++)
+  genfv2RectMeshVerts(a, b, nrows, ncols, position_buff);
+  a = { 0.f, 0.f };
+  b = { 1.f, 1.f };
+  genfv2RectMeshVerts(a, b, nrows, ncols, texture_uv_buff);
+  genRectMeshInds(nrows, ncols, index_buff);
+  for(int i = 0; i < numVertsReqForRectMesh(nrows,ncols); i++)
   {
-    cbuff[i].x = randf();
-    cbuff[i].y = randf();
-    cbuff[i].z = randf();
+    color_buff[i].x = randf();
+    color_buff[i].y = randf();
+    color_buff[i].z = randf();
   }
 
-  glGenBuffers(1, &gl_pos_buff_id);
-  glBindBuffer(GL_ARRAY_BUFFER, gl_pos_buff_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(fv2)*vertsReqForRectMesh(nrows,ncols), vbuff, GL_STATIC_DRAW);
-  glVertexAttribPointer(gl_pos_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-  glEnableVertexAttribArray(gl_pos_attrib_id);
+  glGenBuffers(1, &gl_position_buff_id);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_position_buff_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(fv2)*numVertsReqForRectMesh(nrows,ncols), position_buff, GL_STATIC_DRAW);
+  glVertexAttribPointer(gl_position_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_position_attrib_id);
 
-  glGenBuffers(1, &gl_col_buff_id);
-  glBindBuffer(GL_ARRAY_BUFFER, gl_col_buff_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(fv3)*vertsReqForRectMesh(nrows,ncols), cbuff, GL_STATIC_DRAW);
-  glVertexAttribPointer(gl_col_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-  glEnableVertexAttribArray(gl_col_attrib_id);
+  glGenBuffers(1, &gl_color_buff_id);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_color_buff_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(fv3)*numVertsReqForRectMesh(nrows,ncols), color_buff, GL_STATIC_DRAW);
+  glVertexAttribPointer(gl_color_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_color_attrib_id);
 
-  glGenBuffers(1, &gl_ind_buff_id);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_ind_buff_id);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indsReqForRectMesh(nrows,ncols), ibuff, GL_STATIC_DRAW);
+  glGenBuffers(1, &gl_texture_uv_buff_id);
+  glBindBuffer(GL_ARRAY_BUFFER, gl_texture_uv_buff_id);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(fv2)*numVertsReqForRectMesh(nrows,ncols), texture_uv_buff, GL_STATIC_DRAW);
+  glVertexAttribPointer(gl_texture_uv_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(gl_texture_uv_attrib_id);
+
+  glGenBuffers(1, &gl_index_buff_id);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_index_buff_id);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*numIndsReqForRectMesh(nrows,ncols), index_buff, GL_STATIC_DRAW);
+
+  glActiveTexture(GL_TEXTURE0);
+  glGenTextures(1, &gl_texture_buff_id);
+  glBindTexture(GL_TEXTURE_2D, gl_texture_buff_id);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  int texture_width = 256;
+  int texture_height = 256;
+  char *texture_data = (char *)malloc(sizeof(char)*3*texture_width*texture_height);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,texture_width,texture_height,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data);
+
+  glUniform1i(gl_texture_unif_id, 0);
 
   glViewport(0,0,win_w,win_h);
   glClearColor(randf(),randf(),randf(),1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glDrawElements(GL_TRIANGLES, indsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
+  glDrawElements(GL_TRIANGLES, numIndsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
 
   SDL_GL_SwapWindow(window);
 
@@ -281,7 +315,7 @@ int main(int argc, char* argv[])
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUniform1f(gl_time_unif_id,randf());
-    glDrawElements(GL_TRIANGLES, indsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
+    glDrawElements(GL_TRIANGLES, numIndsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
     SDL_GL_SwapWindow(window);
 
     SDL_Delay(10);
