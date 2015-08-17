@@ -47,6 +47,82 @@ void genfv2RectMesh(fv2 a, fv2 b, int nrows, int ncols, fv2 *vbuff, int *ibuff)
   }
 }
 
+GLuint compileProgram(const char * vs_file_name, const char * fs_file_name)
+{
+  SDL_RWops *io;
+  char vs_file[2048];
+  char fs_file[2048];
+  char *vs_file_p = &vs_file[0];
+  char *fs_file_p = &fs_file[0];
+
+  GLuint gl_vs_id;
+  GLuint gl_fs_id;
+  GLuint gl_program_id;
+
+  io = SDL_RWFromFile(vs_file_name,"r");
+  if(!io)
+  {
+    do_log("Can't find/open file:%s\n%s",vs_file_name,SDL_GetError());
+    return 0;
+  }
+  vs_file[(int)SDL_RWread(io, vs_file, 1, sizeof(vs_file))] = '\0';
+  SDL_RWclose(io);
+
+  io = SDL_RWFromFile(fs_file_name,"r");
+  if(!io)
+  {
+    do_log("Can't find/open file:%s\n%s",fs_file_name,SDL_GetError());
+    return 0;
+  }
+  fs_file[(int)SDL_RWread(io, fs_file, 1, sizeof(fs_file))] = '\0';
+  SDL_RWclose(io);
+
+  gl_vs_id = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(gl_vs_id, 1, &vs_file_p, NULL);
+  glCompileShader(gl_vs_id);
+
+  gl_fs_id = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(gl_fs_id, 1, &fs_file_p, NULL);
+  glCompileShader(gl_fs_id);
+
+  GLint err;
+  glGetShaderiv(gl_vs_id, GL_COMPILE_STATUS, &err);
+  if(err == GL_FALSE)
+  {
+    int l;
+    glGetShaderInfoLog(gl_vs_id, 2048, &l, vs_file_p);
+    do_log("Error compiling VS:%s\n%s",vs_file_name,vs_file);
+    SDL_Quit();
+    return 0;
+  }
+
+  glGetShaderiv(gl_fs_id, GL_COMPILE_STATUS, &err);
+  if(err == GL_FALSE)
+  {
+    int l;
+    glGetShaderInfoLog(gl_fs_id, 2048, &l, fs_file_p);
+    do_log("Error compiling FS:%s\n%s",fs_file_name,fs_file);
+    return 0;
+  }
+
+  gl_program_id = glCreateProgram();
+  glAttachShader(gl_program_id, gl_vs_id);
+  glAttachShader(gl_program_id, gl_fs_id);
+  glLinkProgram(gl_program_id);
+
+  glGetProgramiv(gl_fs_id, GL_LINK_STATUS, &err);
+  if(err == GL_FALSE)
+  {
+    do_log("Error linking VS & FS : %s & %s",vs_file_name,fs_file_name);
+    return 0;
+  }
+
+  glDeleteShader(gl_vs_id);
+  glDeleteShader(gl_fs_id);
+
+  return gl_program_id;
+}
+
 int main(int argc, char* argv[])
 {
   log_data = new Log(); // ugh
@@ -118,16 +194,12 @@ int main(int argc, char* argv[])
 
   //GLuint gl_fb_id;
   GLuint gl_program_id;
-  GLuint gl_vs_id;
-  GLuint gl_fs_id;
   GLuint gl_pos_attrib_id;
   GLuint gl_pos_buff_id;
   GLuint gl_col_attrib_id;
   GLuint gl_col_buff_id;
   GLuint gl_time_unif_id;
   GLuint gl_ind_buff_id;
-
-  SDL_RWops *io;
 
   #if DO_PLATFORM == DO_PLATFORM_ANDROID
   const char *vs_file_name = "shaders/warp2d.vert";
@@ -136,76 +208,13 @@ int main(int argc, char* argv[])
   const char *vs_file_name = "../assets/shaders/warp2d.vert";
   const char *fs_file_name = "../assets/shaders/warp2d.frag";
   #endif
-  char vs_file[2048];
-  char fs_file[2048];
-  char *vs_file_p = &vs_file[0];
-  char *fs_file_p = &fs_file[0];
 
-  io = SDL_RWFromFile(vs_file_name,"r");
-  if(!io)
+  gl_program_id = compileProgram(vs_file_name, fs_file_name);
+  if(!gl_program_id)
   {
-    do_log("Can't find/open file:%s\n%s",vs_file_name,SDL_GetError());
     SDL_Quit();
-    return 1;
+    return 0;
   }
-  vs_file[(int)SDL_RWread(io, vs_file, 1, sizeof(vs_file))] = '\0';
-  SDL_RWclose(io);
-
-  io = SDL_RWFromFile(fs_file_name,"r");
-  if(!io)
-  {
-    do_log("Can't find/open file:%s\n%s",fs_file_name,SDL_GetError());
-    SDL_Quit();
-    return 1;
-  }
-  fs_file[(int)SDL_RWread(io, fs_file, 1, sizeof(fs_file))] = '\0';
-  SDL_RWclose(io);
-
-  gl_vs_id = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(gl_vs_id, 1, &vs_file_p, NULL);
-  glCompileShader(gl_vs_id);
-
-  gl_fs_id = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(gl_fs_id, 1, &fs_file_p, NULL);
-  glCompileShader(gl_fs_id);
-
-  GLint err;
-  glGetShaderiv(gl_vs_id, GL_COMPILE_STATUS, &err);
-  if(err == GL_FALSE)
-  {
-    int l;
-    glGetShaderInfoLog(gl_vs_id, 2048, &l, vs_file_p);
-    do_log("Error compiling VS:%s\n%s",vs_file_name,vs_file);
-    SDL_Quit();
-    return 1;
-  }
-
-  glGetShaderiv(gl_fs_id, GL_COMPILE_STATUS, &err);
-  if(err == GL_FALSE)
-  {
-    int l;
-    glGetShaderInfoLog(gl_fs_id, 2048, &l, fs_file_p);
-    do_log("Error compiling FS:%s\n%s",fs_file_name,fs_file);
-    SDL_Quit();
-    return 1;
-  }
-
-  gl_program_id = glCreateProgram();
-  glAttachShader(gl_program_id, gl_vs_id);
-  glAttachShader(gl_program_id, gl_fs_id);
-  glLinkProgram(gl_program_id);
-
-  glGetProgramiv(gl_fs_id, GL_LINK_STATUS, &err);
-  if(err == GL_FALSE)
-  {
-    do_log("Error linking VS & FS : %s & %s",vs_file_name,fs_file_name);
-    SDL_Quit();
-    return 1;
-  }
-
-  glDeleteShader(gl_vs_id);
-  glDeleteShader(gl_fs_id);
-
   glUseProgram(gl_program_id);
   gl_pos_attrib_id = glGetAttribLocation(gl_program_id, "position");
   gl_col_attrib_id = glGetAttribLocation(gl_program_id, "color");
