@@ -7,7 +7,7 @@ CC = g++
 DEBUGFLAGS = -ggdb3 -O0
 DEBUGGER = gdb -q
 CFLAGS = -Wall -std=c++11 `sdl2-config --cflags`
-LFLAGS = -Wall -framework OpenGL `sdl2-config --libs` -lSDL2_image
+LFLAGS = -Wall -framework OpenGL `sdl2-config --libs` -lSDL2_image -lGLEW
 
 PLATFORM_DEF=DO_PLATFORM_MAC
 
