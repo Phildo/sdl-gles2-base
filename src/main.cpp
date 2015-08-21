@@ -5,8 +5,8 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "GL/glew.h"
 #if DO_PLATFORM == DO_PLATFORM_MAC
+#include "GL/glew.h"
 #include <SDL_opengl.h>
 #elif DO_PLATFORM == DO_PLATFORM_ANDROID
 #include <GLES2/gl2.h>
@@ -25,15 +25,10 @@ int main(int argc, char* argv[])
 
   SDL_Window* window = 0;
   SDL_GLContext gl = 0;
-  if(initGL(&window, &gl) == 1) return 1; //in do_gl
+  int win_w;
+  int win_h;
+  if(initGL(&window, &gl, &win_w, &win_h) == 1) return 1; //in do_gl
 
-  #if DO_PLATFORM == DO_PLATFORM_MAC
-  int win_w = 1024;
-  int win_h = 512;
-  #elif DO_PLATFORM == DO_PLATFORM_ANDROID
-  //int win_w = mode.w;
-  //int win_h = mode.h;
-  #endif
 
   fv2 *qblit_position_buff   = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(1,1));
   fv2 *qblit_texture_uv_buff = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(1,1));
@@ -81,15 +76,15 @@ int main(int argc, char* argv[])
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  int qblit_texture_width = 256;
-  int qblit_texture_height = 256;
+  int qblit_texture_width = 32;
+  int qblit_texture_height = 32;
   char *qblit_texture_data = (char *)malloc(sizeof(char)*3*qblit_texture_width*qblit_texture_height);
   //char *qblit_texture_data = NULL;
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,qblit_texture_width,qblit_texture_height,0,GL_RGB,GL_UNSIGNED_BYTE,qblit_texture_data);
 
   glUniform1i(gl_qblit_texture_unif_id, gl_qblit_texture_active_n);
 
-  int nrows = 2;
+  int nrows = 1;
   int ncols = 2;
   fv2 *position_buff   = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(nrows,ncols));
   fv3 *color_buff      = (fv3 *)malloc(sizeof(fv3)*numVertsReqForRectMesh(nrows,ncols));
@@ -100,9 +95,54 @@ int main(int argc, char* argv[])
   genRectMeshInds(nrows, ncols, index_buff);
   for(int i = 0; i < numVertsReqForRectMesh(nrows,ncols); i++)
   {
-    color_buff[i].x = randf();
-    color_buff[i].y = randf();
-    color_buff[i].z = randf();
+    if(i == 0)
+    {
+      color_buff[i].x = 1.f;
+      color_buff[i].y = 0.f;
+      color_buff[i].z = 0.f;
+    }
+    else if(i == 1)
+    {
+      color_buff[i].x = 0.f;
+      color_buff[i].y = 1.f;
+      color_buff[i].z = 0.f;
+    }
+    else if(i == 2)
+    {
+      color_buff[i].x = 1.f;
+      color_buff[i].y = 1.f;
+      color_buff[i].z = 0.f;
+    }
+    else if(i == 3)
+    {
+      color_buff[i].x = 0.f;
+      color_buff[i].y = 0.f;
+      color_buff[i].z = 1.f;
+    }
+    else if(i == 4)
+    {
+      color_buff[i].x = 1.f;
+      color_buff[i].y = 0.f;
+      color_buff[i].z = 1.f;
+    }
+    else if(i == 5)
+    {
+      color_buff[i].x = 0.f;
+      color_buff[i].y = 1.f;
+      color_buff[i].z = 1.f;
+    }
+    else if(i == 6)
+    {
+      color_buff[i].x = 1.f;
+      color_buff[i].y = 1.f;
+      color_buff[i].z = 1.f;
+    }
+    else
+    {
+      color_buff[i].x = randf();
+      color_buff[i].y = randf();
+      color_buff[i].z = randf();
+    }
   }
 
   GLuint gl_framebuffer_id;
@@ -200,7 +240,7 @@ int main(int argc, char* argv[])
     glVertexAttribPointer(gl_color_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, gl_texture_uv_buff_id);
-    glVertexAttribPointer(gl_texture_uv_attrib_id, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(gl_texture_uv_attrib_id, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_index_buff_id);
 

@@ -8,7 +8,7 @@ GLuint compileProgram(const char * program_file_name)
   int write_ind_a = 0;
   int write_ind_b = 0;
   #if DO_PLATFORM == DO_PLATFORM_ANDROID
-  const char *prefix = "shaders/"
+  const char *prefix = "shaders/";
   #else
   const char *prefix = "../assets/shaders/";
   #endif
@@ -122,7 +122,7 @@ GLuint compileProgram(const char * program_file_name)
   return gl_program_id;
 }
 
-int initGL(SDL_Window **win_p, SDL_GLContext *gl_p)
+int initGL(SDL_Window **win_p, SDL_GLContext *gl_p, int *win_w, int *win_h)
 {
   SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   IMG_Init(IMG_INIT_PNG);
@@ -151,17 +151,17 @@ int initGL(SDL_Window **win_p, SDL_GLContext *gl_p)
   do_log("Width = %d, Height = %d.",mode.w,mode.h);
 
   #if DO_PLATFORM == DO_PLATFORM_MAC
-  int win_w = 1024;
-  int win_h = 512;
+  *win_w = 1024;
+  *win_h = 512;
   #elif DO_PLATFORM == DO_PLATFORM_ANDROID
-  int win_w = mode.w;
-  int win_h = mode.h;
+  *win_w = mode.w;
+  *win_h = mode.h;
   #endif
 
   #if DO_PLATFORM == DO_PLATFORM_MAC
-  *win_p = SDL_CreateWindow("Fish", 0,0,win_w,win_h, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI); //Have to explicitly allow HIGHDPI in Info.plist!
+  *win_p = SDL_CreateWindow("Fish", 0,0,*win_w,*win_h, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI); //Have to explicitly allow HIGHDPI in Info.plist!
   #elif DO_PLATFORM == DO_PLATFORM_ANDROID
-  *win_p = SDL_CreateWindow("Fish", 0,0,win_w,win_h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI);
+  *win_p = SDL_CreateWindow("Fish", 0,0,*win_w,*win_h, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI);
   #endif
   if(*win_p == 0)
   {
@@ -178,6 +178,7 @@ int initGL(SDL_Window **win_p, SDL_GLContext *gl_p)
     return 1;
   }
 
+  #if DO_PLATFORM != DO_PLATFORM_ANDROID
   GLenum err = glewInit();
   if(err != GLEW_OK)
   {
@@ -192,6 +193,7 @@ int initGL(SDL_Window **win_p, SDL_GLContext *gl_p)
     SDL_Quit();
     return 1;
   }
+  #endif
 
   do_log("GL Renderer: %s", glGetString(GL_RENDERER));
   do_log("GL Version: %s", glGetString(GL_VERSION));
