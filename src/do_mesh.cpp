@@ -1,3 +1,4 @@
+#include "do_mesh.h"
 
 int numVertsReqForRectMesh(int nrows, int ncols)
 {

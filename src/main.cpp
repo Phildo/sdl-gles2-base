@@ -2,22 +2,11 @@
 
 #include <stdlib.h>
 
-#include <SDL.h>
-#include <SDL_image.h>
-
-#if DO_PLATFORM == DO_PLATFORM_MAC
-#include "GL/glew.h"
-#include <SDL_opengl.h>
-#elif DO_PLATFORM == DO_PLATFORM_ANDROID
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#endif
-
+#include "do_gl.h"
 #include "do_math.h"
+#include "do_mesh.h"
 #include "logger.h"
 
-#include "mesh.h"
-#include "do_gl.h"
 
 int main(int argc, char* argv[])
 {
