@@ -2,11 +2,10 @@
 
 #include <stdlib.h>
 
-#include "do_gl.h"
+#include "do_gl.h" //includes SDL as well
 #include "do_math.h"
 #include "do_mesh.h"
 #include "logger.h"
-
 
 int main(int argc, char* argv[])
 {
@@ -16,8 +15,7 @@ int main(int argc, char* argv[])
   SDL_GLContext gl = 0;
   int win_w;
   int win_h;
-  if(initGL(&window, &gl, &win_w, &win_h) == 1) return 1; //in do_gl
-
+  if(initGL(&window, &gl, &win_w, &win_h) == 1) return 1;
 
   fv2 *qblit_position_buff   = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(1,1));
   fv2 *qblit_texture_uv_buff = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(1,1));
@@ -65,8 +63,8 @@ int main(int argc, char* argv[])
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  int qblit_texture_width = 32;
-  int qblit_texture_height = 32;
+  int qblit_texture_width = 128;
+  int qblit_texture_height = 128;
   char *qblit_texture_data = (char *)malloc(sizeof(char)*3*qblit_texture_width*qblit_texture_height);
   //char *qblit_texture_data = NULL;
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,qblit_texture_width,qblit_texture_height,0,GL_RGB,GL_UNSIGNED_BYTE,qblit_texture_data);
@@ -142,17 +140,25 @@ int main(int argc, char* argv[])
   GLuint gl_texture_uv_buff_id; GLuint gl_texture_uv_attrib_id;
   GLuint gl_index_buff_id;
   GLuint gl_texture_buff_id;    GLuint gl_texture_unif_id;      GLuint gl_texture_active_n;
+  GLuint gl_model_mat_unif_id;
+  GLuint gl_model_rot_mat_unif_id;
+  GLuint gl_view_mat_unif_id;
+  GLuint gl_proj_mat_unif_id;
   GLuint gl_time_unif_id;
 
   glGenFramebuffers(1, &gl_framebuffer_id);
   glBindFramebuffer(GL_FRAMEBUFFER, gl_framebuffer_id);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl_qblit_texture_buff_id, 0);
 
-  gl_program_id = compileProgram("color2d");
+  gl_program_id = compileProgram("color3d");
   glUseProgram(gl_program_id);
   gl_position_attrib_id = glGetAttribLocation(gl_program_id, "position");
   gl_color_attrib_id = glGetAttribLocation(gl_program_id, "color");
   gl_texture_uv_attrib_id = glGetAttribLocation(gl_program_id, "texture_uv");
+  gl_model_mat_unif_id = glGetUniformLocation(gl_program_id, "model_mat");
+  gl_model_rot_mat_unif_id = glGetUniformLocation(gl_program_id, "model_rot_mat");
+  gl_view_mat_unif_id = glGetUniformLocation(gl_program_id, "view_mat");
+  gl_proj_mat_unif_id = glGetUniformLocation(gl_program_id, "proj_mat");
   gl_time_unif_id = glGetUniformLocation(gl_program_id, "time");
   gl_texture_unif_id = glGetUniformLocation(gl_program_id, "texture");
 
@@ -195,6 +201,10 @@ int main(int argc, char* argv[])
 
   glUniform1i(gl_texture_unif_id, gl_texture_active_n);
 
+  float time = 0.0f;
+  fv3 eye = fv3{0.f,0.f,10.f};
+  fv3 up  = fv3{0.f,1.f,0.f};
+
   Uint8 done = 0;
   SDL_Event event;
 
@@ -236,11 +246,21 @@ int main(int argc, char* argv[])
     glActiveTexture(GL_TEXTURE0+gl_texture_active_n);
     glBindTexture(GL_TEXTURE_2D, gl_texture_buff_id);
 
-    glUniform1f(gl_time_unif_id,randf());
+    time += 0.0001f;
+    glUniform1f(gl_time_unif_id,time);
+    fm4 m;
+    m = identityfm4();
+    glUniformMatrix4fv(gl_model_mat_unif_id, 1, GL_FALSE, &m.x[0]);
+    glUniformMatrix4fv(gl_model_rot_mat_unif_id, 1, GL_FALSE, &m.x[0]);
+
+    eye = matmulfv3(rotatefm3(up,time),eye);
+    m = lookAtfm4(eye, fv3{0.f,0.f,0.f}, up);
+    glUniformMatrix4fv(gl_view_mat_unif_id, 1, GL_FALSE, &m.x[0]);
+    m = perspectivefm4(20.f, 1.f, 1.f, 100.f);
+    glUniformMatrix4fv(gl_proj_mat_unif_id, 1, GL_FALSE, &m.x[0]);
 
     glViewport(0,0,qblit_texture_width,qblit_texture_height);
     glDrawElements(GL_TRIANGLES, numIndsReqForRectMesh(nrows,ncols), GL_UNSIGNED_INT, (void*)0);
-
 
 
     //blit FB

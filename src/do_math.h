@@ -134,14 +134,21 @@ dm3 rotatedm3(dv3 v, double t);
 fm4 rotate3dfm4(fv3 v, float t);
 dm4 rotate3ddm4(dv3 v, double t);
 
+fv2 matmulfv2(fm2 m, fv2 v);
+dv2 matmuldv2(dm2 m, dv2 v);
+fv3 matmulfv3(fm3 m, fv3 v);
+dv3 matmuldv3(dm3 m, dv3 v);
+fv4 matmulfv4(fm4 m, fv4 v);
+dv4 matmuldv4(dm4 m, dv4 v);
+
 fm4 lookAtfm4(fv3 eye, fv3 center, fv3 up);
 dm4 lookAtdm4(dv3 eye, dv3 center, dv3 up);
 
-fm4 perspective(float fovy, float aspect, float zNear, float zFar);
-dm4 perspective(double fovy, double aspect, double zNear, double zFar);
+fm4 perspectivefm4(float fovy, float aspect, float zNear, float zFar);
+dm4 perspectivedm4(double fovy, double aspect, double zNear, double zFar);
 
-fm4 ortho(float left, float right, float bottom, float top, float zNear, float zFar);
-dm4 ortho(double left, double right, double bottom, double top, double zNear, double zFar);
+fm4 orthofm4(float left, float right, float bottom, float top, float zNear, float zFar);
+dm4 orthodm4(double left, double right, double bottom, double top, double zNear, double zFar);
 
 #endif
 

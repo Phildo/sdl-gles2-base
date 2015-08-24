@@ -405,6 +405,49 @@ dm4 rotate3ddm4(dv3 v, double t)
       {                           0.,                           0.,                           0., 1. } };
 }
 
+fv2 matmulfv2(fm2 m, fv2 v)
+{
+  return fv2
+    { m.x[0]*v.x+m.x[1]*v.y,
+      m.y[0]*v.x+m.y[1]*v.y };
+}
+dv2 matmuldv2(dm2 m, dv2 v)
+{
+  return dv2
+    { m.x[0]*v.x+m.x[1]*v.y,
+      m.y[0]*v.x+m.y[1]*v.y };
+}
+fv3 matmulfv3(fm3 m, fv3 v)
+{
+  return fv3
+    { m.x[0]*v.x+m.x[1]*v.y+m.x[2]*v.z,
+      m.y[0]*v.x+m.y[1]*v.y+m.y[2]*v.z,
+      m.z[0]*v.x+m.z[1]*v.y+m.z[2]*v.z };
+}
+dv3 matmuldv3(dm3 m, dv3 v)
+{
+  return dv3
+    { m.x[0]*v.x+m.x[1]*v.y+m.x[2]*v.z,
+      m.y[0]*v.x+m.y[1]*v.y+m.y[2]*v.z,
+      m.z[0]*v.x+m.z[1]*v.y+m.z[2]*v.z };
+}
+fv4 matmulfv4(fm4 m, fv4 v)
+{
+  return fv4
+    { m.x[0]*v.x+m.x[1]*v.y+m.x[2]*v.z+m.x[3]*v.w,
+      m.y[0]*v.x+m.y[1]*v.y+m.y[2]*v.z+m.y[3]*v.w,
+      m.z[0]*v.x+m.z[1]*v.y+m.z[2]*v.z+m.z[3]*v.w,
+      m.w[0]*v.x+m.w[1]*v.y+m.w[2]*v.z+m.w[3]*v.w };
+}
+dv4 matmuldv4(dm4 m, dv4 v)
+{
+  return dv4
+    { m.x[0]*v.x+m.x[1]*v.y+m.x[2]*v.z+m.x[3]*v.w,
+      m.y[0]*v.x+m.y[1]*v.y+m.y[2]*v.z+m.y[3]*v.w,
+      m.z[0]*v.x+m.z[1]*v.y+m.z[2]*v.z+m.z[3]*v.w,
+      m.w[0]*v.x+m.w[1]*v.y+m.w[2]*v.z+m.w[3]*v.w };
+}
+
 //code more or less stolen from glm
 // glm-repo/glm/gtc/matrix_transform.inl : lookAt
 fm4 lookAtfm4(fv3 eye, fv3 center, fv3 up)
@@ -452,7 +495,7 @@ dm4 lookAtdm4(dv3 eye, dv3 center, dv3 up)
 
 //code more or less stolen from glm
 // glm-repo/glm/gtc/matrix_transform.inl : perspective
-fm4 perspective(float fovy, float aspect, float zNear, float zFar)
+fm4 perspectivefm4(float fovy, float aspect, float zNear, float zFar)
 {
   float tanHalfFovy = tan(fovy / 2.f);
 
@@ -464,7 +507,7 @@ fm4 perspective(float fovy, float aspect, float zNear, float zFar)
   r.w[2] = - (2.f * zFar * zNear) / (zFar - zNear);
   return r;
 }
-dm4 perspective(double fovy, double aspect, double zNear, double zFar)
+dm4 perspectivedm4(double fovy, double aspect, double zNear, double zFar)
 {
   double tanHalfFovy = tan(fovy / 2.f);
 
@@ -479,7 +522,7 @@ dm4 perspective(double fovy, double aspect, double zNear, double zFar)
 
 //code more or less stolen from glm
 // glm-repo/glm/gtc/matrix_transform.inl : ortho
-fm4 ortho(float left, float right, float bottom, float top, float zNear, float zFar)
+fm4 orthofm4(float left, float right, float bottom, float top, float zNear, float zFar)
 {
   fm4 r = identityfm4();
   r.x[0] = 2.f / (right - left);
@@ -490,7 +533,7 @@ fm4 ortho(float left, float right, float bottom, float top, float zNear, float z
   r.w[2] = -(zFar + zNear) / (zFar - zNear);
   return r;
 }
-dm4 ortho(double left, double right, double bottom, double top, double zNear, double zFar)
+dm4 orthodm4(double left, double right, double bottom, double top, double zNear, double zFar)
 {
   dm4 r = identitydm4();
   r.x[0] = 2.f / (right - left);

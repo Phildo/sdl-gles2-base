@@ -203,8 +203,8 @@ int initGL(SDL_Window **win_p, SDL_GLContext *gl_p, int *win_w, int *win_h)
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+  //glEnable(GL_CULL_FACE);
+  //glCullFace(GL_BACK);
   glEnable(GL_TEXTURE_2D);
 
   return 0;
