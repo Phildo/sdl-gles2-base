@@ -1,6 +1,8 @@
 #ifndef DO_GL_H
 #define DO_GL_H
 
+#include "defines.h"
+
 #include <SDL.h>
 #include <SDL_image.h>
 
