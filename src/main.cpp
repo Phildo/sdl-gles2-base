@@ -20,14 +20,21 @@ int main(int argc, char* argv[])
   int win_h;
   if(initGL(&window, &gl, &win_w, &win_h) == 1) return 1;
 
+  GLuint gl_depth_buff_id;
   GLuint gl_framebuffer_id;
 
   blit_renderer br; initBlitRenderer(&br);
   renderer r;       initRenderer(&r);
 
+  glGenRenderbuffers(1, &gl_depth_buff_id);
+  glBindRenderbuffer(GL_RENDERBUFFER, gl_depth_buff_id);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, br.texture_width, br.texture_height);
+
   glGenFramebuffers(1, &gl_framebuffer_id);
   glBindFramebuffer(GL_FRAMEBUFFER, gl_framebuffer_id);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, br.gl_texture_buff_id, 0);
+
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, gl_depth_buff_id);
 
   Uint8 done = 0;
   SDL_Event event;

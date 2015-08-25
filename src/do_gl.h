@@ -16,6 +16,9 @@
 
 GLuint compileProgram(const char * program_file_name);
 int initGL(SDL_Window **win_p, SDL_GLContext *gl_p, int *win_w, int *win_h);
+void checkGLErrorMark(const char *c);
+void checkGLError();
+void checkGLFramebufferError();
 
 #endif
 

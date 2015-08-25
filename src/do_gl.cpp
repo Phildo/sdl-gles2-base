@@ -17,6 +17,7 @@ GLuint compileProgram(const char * program_file_name)
   #endif
   const char *vpostfix = ".vert";
   const char *fpostfix = ".frag";
+
   write_ind_b = 0;
   while(prefix[write_ind_b] != '\0')
   {
@@ -106,7 +107,7 @@ GLuint compileProgram(const char * program_file_name)
   glAttachShader(gl_program_id, gl_fs_id);
   glLinkProgram(gl_program_id);
 
-  glGetProgramiv(gl_fs_id, GL_LINK_STATUS, &err);
+  glGetProgramiv(gl_program_id, GL_LINK_STATUS, &err);
   if(err == GL_FALSE)
   {
     do_log("Error linking VS & FS : %s & %s",vs_file_name,fs_file_name);
@@ -208,5 +209,50 @@ int initGL(SDL_Window **win_p, SDL_GLContext *gl_p, int *win_w, int *win_h)
   glEnable(GL_TEXTURE_2D);
 
   return 0;
+}
+
+void checkGLErrorMark(const char *c)
+{
+  do_log("checking %s",c);
+  checkGLError();
+}
+
+void checkGLError()
+{
+  GLenum e = glGetError();
+  switch(e)
+  {
+    case GL_NO_ERROR:
+      do_log("None"); break;
+    case GL_INVALID_ENUM:
+      do_log("An unacceptable value is specified for an enumerated argument. The offending command is ignored and has no other side effect than to set the error flag."); break;
+    case GL_INVALID_VALUE:
+      do_log("A numeric argument is out of range. The offending command is ignored and has no other side effect than to set the error flag."); break;
+    case GL_INVALID_OPERATION:
+      do_log("The specified operation is not allowed in the current state. The offending command is ignored and has no other side effect than to set the error flag."); break;
+    case GL_INVALID_FRAMEBUFFER_OPERATION:
+      do_log("The command is trying to render to or read from the framebuffer while the currently bound framebuffer is not framebuffer complete (i.e. the return value from glCheckFramebufferStatus is not GL_FRAMEBUFFER_COMPLETE). The offending command is ignored and has no other side effect than to set the error flag."); break;
+    case GL_OUT_OF_MEMORY:
+      do_log("There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded."); break;
+  }
+}
+
+void checkGLFramebufferError()
+{
+  GLenum e = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  switch(e)
+  {
+    case GL_FRAMEBUFFER_COMPLETE:
+      do_log("complete!"); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      do_log("Not all framebuffer attachment points are framebuffer attachment complete. This means that at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached."); break;
+              //Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.
+    //case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+      //do_log("Not all attached images have the same width and height."); break;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      do_log("No images are attached to the framebuffer."); break;
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      do_log("unsupported..."); break;
+  }
 }
 

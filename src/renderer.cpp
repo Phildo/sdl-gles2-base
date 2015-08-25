@@ -5,8 +5,8 @@
 
 void initRenderer(renderer *r)
 {
-  r->nrows = 1;
-  r->ncols = 2;
+  r->nrows = 32;
+  r->ncols = 32;
   fv2 *position_buff   = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(r->nrows,r->ncols));
   fv3 *color_buff      = (fv3 *)malloc(sizeof(fv3)*numVertsReqForRectMesh(r->nrows,r->ncols));
   fv2 *texture_uv_buff = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(r->nrows,r->ncols));
@@ -14,45 +14,46 @@ void initRenderer(renderer *r)
   genfv2RectMeshVerts({ -0.9f, -0.9f }, { 0.9f, 0.9f }, r->nrows, r->ncols, position_buff);
   genfv2RectMeshVerts(    { 0.f, 0.f },   { 1.f, 1.f }, r->nrows, r->ncols, texture_uv_buff);
   genRectMeshInds(r->nrows, r->ncols, index_buff);
+
   for(int i = 0; i < numVertsReqForRectMesh(r->nrows,r->ncols); i++)
   {
-    if(i == 0)
+    if(i%6 == 0)
     {
       color_buff[i].x = 1.f;
       color_buff[i].y = 0.f;
       color_buff[i].z = 0.f;
     }
-    else if(i == 1)
+    else if(i%6 == 1)
     {
       color_buff[i].x = 0.f;
       color_buff[i].y = 1.f;
       color_buff[i].z = 0.f;
     }
-    else if(i == 2)
+    else if(i%6 == 2)
     {
       color_buff[i].x = 1.f;
       color_buff[i].y = 1.f;
       color_buff[i].z = 0.f;
     }
-    else if(i == 3)
+    else if(i%6 == 3)
     {
       color_buff[i].x = 0.f;
       color_buff[i].y = 0.f;
       color_buff[i].z = 1.f;
     }
-    else if(i == 4)
+    else if(i%6 == 4)
     {
       color_buff[i].x = 1.f;
       color_buff[i].y = 0.f;
       color_buff[i].z = 1.f;
     }
-    else if(i == 5)
+    else if(i%6 == 5)
     {
       color_buff[i].x = 0.f;
       color_buff[i].y = 1.f;
       color_buff[i].z = 1.f;
     }
-    else if(i == 6)
+    else if(i%6 == 6)
     {
       color_buff[i].x = 1.f;
       color_buff[i].y = 1.f;
@@ -117,16 +118,14 @@ void initRenderer(renderer *r)
 
   glUniform1i(r->gl_texture_unif_id, r->gl_texture_active_n);
 
-
   r->time = 0.0f;
-  r->eye = fv3{0.f,0.f,10.f};
+  r->eye = fv3{0.f,0.f,2.f};
   r->up  = fv3{0.f,1.f,0.f};
 }
 
 void updateRenderer(renderer *r)
 {
-  r->time += 0.0001f;
-  r->eye = matmulfv3(rotatefm3(r->up,r->time),r->eye);
+  r->time += 0.01f;
 }
 
 void renderRenderer(renderer *r, int width, int height)
@@ -156,7 +155,7 @@ void renderRenderer(renderer *r, int width, int height)
   glUniformMatrix4fv(r->gl_model_mat_unif_id, 1, GL_FALSE, &m.x[0]);
   glUniformMatrix4fv(r->gl_model_rot_mat_unif_id, 1, GL_FALSE, &m.x[0]);
 
-  m = lookAtfm4(r->eye, fv3{0.f,0.f,0.f}, r->up);
+  m = lookAtfm4(matmulfv3(rotatefm3(r->up,r->time),r->eye), fv3{0.f,0.f,0.f}, r->up);
   glUniformMatrix4fv(r->gl_view_mat_unif_id, 1, GL_FALSE, &m.x[0]);
   m = perspectivefm4(20.f, 1.f, 1.f, 100.f);
   glUniformMatrix4fv(r->gl_proj_mat_unif_id, 1, GL_FALSE, &m.x[0]);

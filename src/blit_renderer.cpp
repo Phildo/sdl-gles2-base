@@ -6,7 +6,7 @@
 void initBlitRenderer(blit_renderer *br)
 {
   //      2   4   8  16  32  64 128 256 512 1024 2048
-  int n = 2 * 2 * 2 * 2 * 2 * 2 * 2 * 2;// * 2 *  2 *  2;
+  int n = 2 * 2 * 2 * 2 * 2 * 2 * 2;// * 2 * 2 *  2 *  2;
   br->texture_width = n;
   br->texture_height = n;
 
@@ -44,14 +44,10 @@ void initBlitRenderer(blit_renderer *br)
   glActiveTexture(GL_TEXTURE0+br->gl_texture_active_n);
   glGenTextures(1, &br->gl_texture_buff_id);
   glBindTexture(GL_TEXTURE_2D, br->gl_texture_buff_id);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   char *texture_data = (char *)malloc(sizeof(char)*3*br->texture_width*br->texture_height);
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,br->texture_width,br->texture_height,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data);
 

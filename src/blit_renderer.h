@@ -10,7 +10,7 @@ struct blit_renderer
   GLuint gl_position_buff_id;   GLuint gl_position_attrib_id;
   GLuint gl_texture_uv_buff_id; GLuint gl_texture_uv_attrib_id;
   GLuint gl_index_buff_id;
-  GLuint gl_texture_buff_id;    GLuint gl_texture_unif_id;      GLuint gl_texture_active_n;
+  GLuint gl_texture_buff_id; GLuint gl_texture_unif_id; GLuint gl_texture_active_n;
 
   int texture_width;
   int texture_height;
