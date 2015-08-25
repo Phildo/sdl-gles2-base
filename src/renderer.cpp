@@ -131,7 +131,8 @@ void updateRenderer(renderer *r)
 
 void renderRenderer(renderer *r, int width, int height)
 {
-  glClearColor(randf(),randf(),randf(),1);
+  //glClearColor(randf(),randf(),randf(),1);
+  glClearColor(0.f,0.f,0.f,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(r->gl_program_id);

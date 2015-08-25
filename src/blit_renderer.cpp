@@ -5,8 +5,10 @@
 
 void initBlitRenderer(blit_renderer *br)
 {
-  br->texture_width = 128;
-  br->texture_height = 128;
+  //      2   4   8  16  32  64 128 256 512 1024 2048
+  int n = 2 * 2 * 2 * 2 * 2 * 2 * 2 * 2;// * 2 *  2 *  2;
+  br->texture_width = n;
+  br->texture_height = n;
 
   //fill in-mem buffs
   fv2 *position_buff   = (fv2 *)malloc(sizeof(fv2)*numVertsReqForRectMesh(1,1));
@@ -47,6 +49,8 @@ void initBlitRenderer(blit_renderer *br)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   char *texture_data = (char *)malloc(sizeof(char)*3*br->texture_width*br->texture_height);
   glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,br->texture_width,br->texture_height,0,GL_RGB,GL_UNSIGNED_BYTE,texture_data);
